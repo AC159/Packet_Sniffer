@@ -28,24 +28,21 @@ def main():
     if args.interfaces:
         print(netifaces.interfaces())
 
-    # todo: determine why the code runs (sniff_basic && sniff_detail) even if they are not specified, maybe
-    #  because of the store_true? ... but it's supposed to store False if not specified...
-
     if args.sniff_basic:
 
         if args.count:
-            sniff(count=args.count, iface="wlx00c0caaba31a", prn=lambda p: p.summary())
+            sniff(count=args.count, iface=args.interface, prn=lambda p: p.summary())
         else:
             # Display a basic summary of each captured packet:
-            sniff(iface="wlx00c0caaba31a", prn=lambda p: p.summary())
+            sniff(iface=args.interface, prn=lambda p: p.summary())
 
     if args.sniff_detail:
 
         if args.count:
-            sniff(count=args.count, iface="wlx00c0caaba31a", prn=lambda p: p.show())
+            sniff(count=args.count, iface=args.interface, prn=lambda p: p.show())
         else:
             # Display a basic summary of each captured packet:
-            sniff(iface="wlx00c0caaba31a", prn=lambda p: p.show())
+            sniff(iface=args.interface, prn=lambda p: p.show())
 
     debug = sty.dim & fg.white
     success = fg.bright_blue & sty.bold
