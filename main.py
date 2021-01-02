@@ -1,6 +1,7 @@
 from scapy.all import *
 from scapy.layers.inet import IP, ICMP
 from chalky import sty, fg, bg
+from simple_chalk import chalk
 import argparse
 from banners import print_banner
 import sys
@@ -25,19 +26,28 @@ def main():
 
     args = parser.parse_args()
 
-    if args.interfaces:
-        print(netifaces.interfaces())
+    # If the user did not specify any network interface and did not specify the option to list the detected
+    # interfaces, then issue a message:
+    if not args.interface and not args.interfaces:
+        print(chalk.magenta("Network interface was not specified..."))
+        print(chalk.magenta("Run the program with the ") + chalk.green("-i / --interfaces") +
+              chalk.magenta(" option to show a list of detected network interfaces..."))
+        sys.exit(0)
 
-    # todo: determine why the code runs (sniff_basic && sniff_detail) even if they are not specified, maybe
-    #  because of the store_true? ... but it's supposed to store False if not specified...
+    if args.interfaces:
+
+        for count, interface in enumerate(netifaces.interfaces()):
+            print(str(count + 1) + '. ' + interface)
+
+        sys.exit(0)
 
     if args.sniff_basic:
 
         if args.count:
-            sniff(count=args.count, iface="wlx00c0caaba31a", prn=lambda p: p.summary())
+            sniff(count=args.count, iface=args.interface, prn=lambda p: p.summary())
         else:
             # Display a basic summary of each captured packet:
-            sniff(iface="wlx00c0caaba31a", prn=lambda p: p.summary())
+            sniff(iface=args.interface, prn=lambda p: p.summary())
 
     if args.sniff_detail:
 
@@ -63,7 +73,7 @@ def main():
     # print(packets.summary())
 
     # Display detailed information about each packet:
-    sniff(iface="wlx00c0caaba31a", prn=lambda p: p.show())
+    # sniff(iface="wlx00c0caaba31a", prn=lambda p: p.show())
 
 
 if __name__ == '__main__':

@@ -13,7 +13,7 @@ def print_banner():
 
     elif num == 2:
         f = Figlet(font='big')
-        print(sty.dim & fg.white | f.renderText("Rufus!"))
+        print(sty.dim & fg.bright_cyan | f.renderText("Rufus!"))
 
     elif num == 3:
         f = Figlet(font='starwars')
