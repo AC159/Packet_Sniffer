@@ -40,6 +40,7 @@ def main():
             sniff(iface="wlx00c0caaba31a", prn=lambda p: p.summary())
 
     if args.sniff_detail:
+
         if args.count:
             sniff(count=args.count, iface="wlx00c0caaba31a", prn=lambda p: p.show())
         else:
