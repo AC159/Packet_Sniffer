@@ -6,3 +6,4 @@ The program must be ran as root on Linux with the virtual environment:
 
 		sudo ./venv/bin/python main.py
 
+Tkinter may require to be installed as a global dependency...
