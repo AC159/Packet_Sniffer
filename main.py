@@ -52,19 +52,21 @@ def main():
     if args.sniff_detail:
 
         if args.count:
-            sniff(count=args.count, iface="wlx00c0caaba31a", prn=lambda p: p.show())
+            sniff(count=args.count, iface=args.interface, prn=lambda p: p.show())
         else:
             # Display a basic summary of each captured packet:
-            sniff(iface="wlx00c0caaba31a", prn=lambda p: p.show())
+            sniff(iface=args.interface, prn=lambda p: p.show())
+
+    # Ping an IP address or domain name: (i.e. google.com)
+    if args.ping:
+        p = sr1(IP(dst=args.ping / ICMP()))
+        if p:
+            p.show()
 
     debug = sty.dim & fg.white
     success = fg.bright_blue & sty.bold
     error = fg.red & sty.bold
     critical = bg.red & fg.white
-
-    # p = sr1(IP(dst="google.com") / ICMP())
-    # if p:
-    #     p.show()
 
     # packets = sniff(count=5)
     # print(packets)
