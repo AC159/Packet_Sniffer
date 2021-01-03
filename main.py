@@ -18,9 +18,12 @@ def main():
     # Can't have all these options turned on:
     group.add_argument('--sniff_basic', action='store_true', help="Give basic information about each sniffed packet")
     group.add_argument('--sniff_detail', action='store_true', help="Give detailed information about each sniffed packet")
-    group.add_argument('-p', '--ping', type=str, help="Ping domain name or IP address")
+    group.add_argument('--ping', type=str, help="Ping domain name or IP address")
     group.add_argument('--interfaces', action='store_true', help="Show a list of detected network interfaces")
+    group.add_argument('-s', '--syn', type=str, help="Check for open ports with a syn scan: provide with an ip address & --port option")
+    group.add_argument('--arp', action='store_true', help="Try to discover available hosts present on the network")
 
+    parser.add_argument('--port', type=str, help="Port number of the IP address to scan")
     parser.add_argument('-i', '--interface', type=str, help="Name of the wireless network adapter")
     parser.add_argument('-c', '--count', type=int, help='# of packets to sniff')
 
@@ -54,28 +57,31 @@ def main():
         if args.count:
             sniff(count=args.count, iface=args.interface, prn=lambda p: p.show())
         else:
-            # Display a basic summary of each captured packet:
+            # Display details of each captured packet:
             sniff(iface=args.interface, prn=lambda p: p.show())
 
-    # Ping an IP address or domain name: (i.e. google.com)
+    # Ping an IP address or domain name: (i.e. google.com) or local router 192.168.0.1:
     if args.ping:
-        p = sr1(IP(dst=args.ping / ICMP()))
-        if p:
-            p.show()
 
-    debug = sty.dim & fg.white
-    success = fg.bright_blue & sty.bold
-    error = fg.red & sty.bold
-    critical = bg.red & fg.white
+        print(fg.cyan | "Concise response: ")
+        print(sr1(IP(dst=args.ping)))
 
-    # packets = sniff(count=5)
-    # print(packets)
-    #
-    # print(success | "Here are some details about the packets: ")
-    # print(packets.summary())
+        print(fg.cyan | "Detailed response: ")
+        print(sr1(IP(dst=args.ping)).show())
 
-    # Display detailed information about each packet:
-    # sniff(iface="wlx00c0caaba31a", prn=lambda p: p.show())
+    if args.syn:
+
+        if not args.port:
+            print(fg.bright_red | "You must specify the --port number with the SYN option...")
+
+        answer = sr(IP(dst=args.syn) / TCP(dport=args.port, flags='S'))
+        print(answer.summary)
+
+    if args.arp:
+
+        answered, unanswered = srp(Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst="192.168.0.0/24"), timeout=2)
+        print(chalk.bgGreen("ARP answers: "))
+        answered.summary(lambda s, r: r.sprintf("%Ether.src% %ARP.psrc%"))
 
 
 if __name__ == '__main__':
