@@ -23,6 +23,12 @@ def main():
     group.add_argument('-s', '--syn', type=str, help="Check for open ports with a syn scan: provide with an ip address & --port option")
     group.add_argument('--arp', action='store_true', help="Try to discover available hosts present on the network")
 
+    group_2 = parser.add_mutually_exclusive_group()
+
+    # Cannot read & write at the same time:
+    group_2.add_argument('--write', type=str, help="Write captured packets (end filename with .pcap)")
+    group_2.add_argument('--read', type=str, help="Read .pcap file and display summary of each packet")
+
     parser.add_argument('--port', type=str, help="Port number of the IP address to scan")
     parser.add_argument('-i', '--interface', type=str, help="Name of the wireless network adapter")
     parser.add_argument('-c', '--count', type=int, help='# of packets to sniff')
@@ -46,11 +52,26 @@ def main():
 
     if args.sniff_basic:
 
-        if args.count:
-            sniff(count=args.count, iface=args.interface, prn=lambda p: p.summary())
+        # todo: Add filter for TCP / ARP / ICMP packets...
+
+        if args.write:
+            # Write to pcap file:
+
+            if args.count:
+                packets = sniff(count=args.count, iface=args.interface)
+                wrpcap(args.write, packets)
+            else:
+                # Display a basic summary of each captured packet:
+                packets = sniff(iface=args.interface)
+                wrpcap(args.write, packets)
+
         else:
-            # Display a basic summary of each captured packet:
-            sniff(iface=args.interface, prn=lambda p: p.summary())
+
+            if args.count:
+                sniff(count=args.count, iface=args.interface, prn=lambda p: p.summary())
+            else:
+                # Display a basic summary of each captured packet:
+                sniff(iface=args.interface, prn=lambda p: p.summary())
 
     if args.sniff_detail:
 
@@ -75,13 +96,18 @@ def main():
             print(fg.bright_red | "You must specify the --port number with the SYN option...")
 
         answer = sr(IP(dst=args.syn) / TCP(dport=args.port, flags='S'))
-        print(answer.summary)
+        print(answer.summary())
 
     if args.arp:
 
-        answered, unanswered = srp(Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst="192.168.0.0/24"), timeout=2)
+        answered, unanswered = srp(Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst="192.168.0.0/24"), timeout=5)
         print(chalk.bgGreen("ARP answers: "))
-        answered.summary(lambda s, r: r.sprintf("%Ether.src% %ARP.psrc%"))
+        answered.summary(lambda s, r: r.sprintf("%Ether.src%: %ARP.psrc%"))
+
+    if args.read:
+
+        packets = rdpcap(args.read)
+        print(packets.summary())
 
 
 if __name__ == '__main__':
